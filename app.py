@@ -1,96 +1,144 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
+import requests
+import datetime
+from openai import OpenAI
 
-# ---------------- CONFIG ----------------
-st.set_page_config(page_title="Smart CGAS Platform", layout="wide")
+# ---------- PAGE CONFIG ----------
+st.set_page_config(page_title="Aditya Nexus AI", layout="wide")
 
-# ---------------- HEADER ----------------
-st.title("🏦 Smart CGAS Platform")
-st.caption("AI + Wealth + Tax Optimization Engine")
+# ---------- CUSTOM CSS ----------
+st.markdown("""
+    <style>
+    .main {
+        background: linear-gradient(135deg, #0f172a, #1e293b);
+        color: white;
+    }
+    .card {
+        padding: 20px;
+        border-radius: 15px;
+        background: rgba(255,255,255,0.05);
+        box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        margin-bottom: 15px;
+    }
+    .metric {
+        font-size: 22px;
+        font-weight: bold;
+    }
+    </style>
+""", unsafe_allow_html=True)
 
-# ---------------- SIDEBAR ----------------
+# ---------- TITLE ----------
+st.title("🚀 Aditya Nexus AI")
+st.caption("Next-Gen Intelligent CGAS Platform")
+
+# ---------- SIDEBAR ----------
 menu = st.sidebar.radio("Navigation", [
     "🏠 Dashboard",
-    "📊 Calculator",
+    "💰 Tax Engine",
+    "📈 Market",
     "🔮 Simulator",
-    "📈 Insights",
-    "🤖 AI Advisor",
+    "⚠️ Compliance",
+    "🤖 AI Advisor"
 ])
 
-# ---------------- DASHBOARD ----------------
+# ---------- API ----------
+client = OpenAI(api_key="YOUR_OPENAI_API_KEY")
+
+# ---------- DASHBOARD ----------
 if menu == "🏠 Dashboard":
+    st.subheader("📊 Financial Overview")
+
     col1, col2, col3 = st.columns(3)
-    col1.metric("Capital Gain", "₹12L")
-    col2.metric("Tax", "₹2.4L")
-    col3.metric("Saved", "₹1.2L")
 
-    st.subheader("Utilization")
+    with col1:
+        st.markdown('<div class="card"><div class="metric">₹10,00,000</div>Total Gain</div>', unsafe_allow_html=True)
 
-    data = pd.DataFrame({
-        "Type": ["Used", "Remaining"],
-        "Amount": [500000, 700000]
-    })
+    with col2:
+        st.markdown('<div class="card"><div class="metric">₹2,00,000</div>Tax Saved</div>', unsafe_allow_html=True)
 
-    fig, ax = plt.subplots()
-    ax.pie(data["Amount"], labels=data["Type"], autopct='%1.1f%%')
-    st.pyplot(fig)
+    with col3:
+        st.markdown('<div class="card"><div class="metric">₹8,00,000</div>Net Wealth</div>', unsafe_allow_html=True)
 
-# ---------------- CALCULATOR ----------------
-elif menu == "📊 Calculator":
-    sale = st.number_input("Sale Price", 0)
-    purchase = st.number_input("Purchase Price", 0)
+    st.progress(70)
 
-    if st.button("Calculate"):
-        gain = sale - purchase
-        tax = gain * 0.2 if gain > 0 else 0
+# ---------- TAX ----------
+elif menu == "💰 Tax Engine":
+    st.subheader("💰 Smart Tax Calculator")
 
-        st.success(f"Gain: ₹{gain}")
-        st.error(f"Tax: ₹{tax}")
+    col1, col2 = st.columns(2)
 
-        if gain > 1000000:
-            st.info("💡 Property + Bonds recommended")
-        elif gain > 500000:
-            st.info("💡 CGAS + Bonds")
-        else:
-            st.info("💡 CGAS only")
+    with col1:
+        gain = st.number_input("Capital Gain", value=1000000)
 
-# ---------------- SIMULATOR ----------------
+    with col2:
+        reinvest = st.number_input("Reinvestment", value=0)
+
+    if st.button("Calculate Tax"):
+        tax = (gain - reinvest) * 0.2
+        st.success(f"💸 Estimated Tax: ₹{tax}")
+
+# ---------- MARKET ----------
+elif menu == "📈 Market":
+    st.subheader("📈 Live Market Tracker")
+
+    symbol = st.text_input("Enter Stock Symbol")
+
+    if st.button("Fetch Data"):
+        url = f"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol={symbol}&apikey=YOUR_API_KEY"
+        data = requests.get(url).json()
+
+        try:
+            df = pd.DataFrame.from_dict(data["Time Series (Daily)"], orient='index')
+            df = df.astype(float)
+            df = df.sort_index()
+
+            st.line_chart(df["4. close"])
+        except:
+            st.error("Error fetching data")
+
+# ---------- SIMULATOR ----------
 elif menu == "🔮 Simulator":
-    gain = st.number_input("Capital Gain", 0)
-    reinvest = st.slider("Reinvest", 0, int(gain) if gain > 0 else 0)
+    st.subheader("🔮 What-If Analysis")
+
+    gain = st.slider("Capital Gain", 0, 2000000, 1000000)
+    reinvest = st.slider("Reinvest", 0, gain, 200000)
 
     before = gain * 0.2
     after = (gain - reinvest) * 0.2
 
-    st.write("Tax Before:", before)
-    st.write("Tax After:", after)
+    st.metric("Tax Before", f"₹{before}")
+    st.metric("Tax After", f"₹{after}")
 
-# ---------------- INSIGHTS ----------------
-elif menu == "📈 Insights":
-    st.subheader("Smart Insights")
+# ---------- COMPLIANCE ----------
+elif menu == "⚠️ Compliance":
+    st.subheader("⚠️ Risk Monitor")
 
-    gain = st.number_input("Enter Gain", 0)
+    date = st.date_input("Investment Date")
+    days = (datetime.date.today() - date).days
 
-    if gain > 1000000:
-        st.warning("⚠ High tax exposure detected")
-        st.success("✔ Recommendation: Property reinvestment")
-    elif gain > 500000:
-        st.info("💡 Moderate tax planning needed")
+    if days > 1000:
+        st.error("🚨 High Risk")
+    elif days > 700:
+        st.warning("⚠️ Deadline Near")
     else:
-        st.success("✔ Low tax impact")
+        st.success("✅ Safe")
 
-# ---------------- AI ADVISOR ----------------
+# ---------- AI ----------
 elif menu == "🤖 AI Advisor":
-    st.subheader("AI Advisor")
+    st.subheader("🤖 AI Assistant")
 
-    user = st.text_input("Ask anything:")
+    query = st.text_input("Ask anything")
 
-    if user:
-        # fallback logic (works without API)
-        if "tax" in user.lower():
-            st.write("Tax is approx 20%. Use CGAS or reinvestment.")
-        elif "save" in user.lower():
-            st.write("Use CGAS + 54EC bonds to save tax.")
-        else:
-            st.write("AI suggestion: Plan reinvestment smartly.")
+    if st.button("Ask"):
+        if query:
+            response = client.chat.completions.create(
+                model="gpt-4.1-mini",
+                messages=[{"role":"user","content":query}]
+            )
+            st.write(response.choices[0].message.content)
+
+# ---------- FOOTER ----------
+st.markdown("---")
+st.caption("Built by Aditya | IIT Madras | AI Innovator")
